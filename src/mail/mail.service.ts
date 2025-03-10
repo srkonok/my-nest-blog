@@ -26,6 +26,14 @@ export class MailService {
     });
   }
 
+  async sendPasswordResetSuccessEmail(user: User) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Password Reset Successful',
+      html: this.mailTemplatesService.getPasswordResetSuccessTemplate(user.name),
+    });
+  }
+
   getPasswordResetForm(token: string): string {
     return this.mailTemplatesService.getPasswordResetFormTemplate(token);
   }

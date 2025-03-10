@@ -134,6 +134,9 @@ export class AuthService {
         // Remove the used token
         this.resetTokens.delete(resetPasswordDto.token);
 
+        // Send success email
+        await this.mailService.sendPasswordResetSuccessEmail(user);
+
         return {
             message: 'Password has been reset successfully',
             status: 200

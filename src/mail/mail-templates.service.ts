@@ -30,21 +30,31 @@ export class MailTemplatesService {
               input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
               button { background: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
               .error { color: red; margin-top: 10px; }
+              .success { color: green; margin-top: 10px; display: none; }
+              .form-container { display: block; }
           </style>
       </head>
       <body>
           <div class="container">
               <h1>Reset Your Password</h1>
               <div id="errorMessage" class="error" style="display: none;"></div>
-              <div class="form-group">
-                  <label for="password">New Password</label>
-                  <input type="password" id="password" name="password" required>
+              <div id="successMessage" class="success">
+                  <h2>Password Reset Successful!</h2>
+                  <p>Your password has been reset successfully.</p>
+                  <p>You will also receive a confirmation email.</p>
+                  <p>You can now <a href="/login">login</a> with your new password.</p>
               </div>
-              <div class="form-group">
-                  <label for="confirmPassword">Confirm Password</label>
-                  <input type="password" id="confirmPassword" name="confirmPassword" required>
+              <div id="formContainer" class="form-container">
+                  <div class="form-group">
+                      <label for="password">New Password</label>
+                      <input type="password" id="password" name="password" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="confirmPassword">Confirm Password</label>
+                      <input type="password" id="confirmPassword" name="confirmPassword" required>
+                  </div>
+                  <button onclick="resetPassword('${token}')">Reset Password</button>
               </div>
-              <button onclick="resetPassword('${token}')">Reset Password</button>
           </div>
           
           <script>
@@ -52,6 +62,8 @@ export class MailTemplatesService {
                   const password = document.getElementById('password').value;
                   const confirmPassword = document.getElementById('confirmPassword').value;
                   const errorMessage = document.getElementById('errorMessage');
+                  const successMessage = document.getElementById('successMessage');
+                  const formContainer = document.getElementById('formContainer');
                   
                   errorMessage.style.display = 'none';
                   
@@ -77,8 +89,14 @@ export class MailTemplatesService {
                   .then(response => response.json())
                   .then(data => {
                       if (data.status === 200) {
-                          alert('Password reset successful! You can now login with your new password.');
-                          window.location.href = '/login';
+                          // Show success message and hide form
+                          formContainer.style.display = 'none';
+                          successMessage.style.display = 'block';
+                          
+                          // Redirect after 5 seconds
+                          setTimeout(() => {
+                              window.location.href = '/login';
+                          }, 5000);
                       } else {
                           errorMessage.textContent = data.message || 'An error occurred';
                           errorMessage.style.display = 'block';
@@ -116,6 +134,15 @@ export class MailTemplatesService {
           </div>
       </body>
       </html>
+    `;
+  }
+
+  getPasswordResetSuccessTemplate(userName: string): string {
+    return `
+      <h3>Hello ${userName},</h3>
+      <p>Your password has been successfully reset.</p>
+      <p>If you did not perform this action, please contact our support team immediately.</p>
+      <p>Thank you for using our service!</p>
     `;
   }
 } 
