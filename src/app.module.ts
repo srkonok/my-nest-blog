@@ -1,24 +1,28 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { MailModule } from './mail/mail.module';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
 import { HealthModule } from './health/health.module';
+import { AuditModule } from './audit/audit.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { UploadModule } from './upload/upload.module';
+import configuration, { validationSchema } from './config/configuration';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
 import { LoggerModule } from './common/logger/logger.module';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { AuditModule } from './common/audit/audit.module';
-import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { VersionModule } from './common/modules/version.module';
-import configuration, { validationSchema } from './config/configuration';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -48,6 +52,12 @@ import configuration, { validationSchema } from './config/configuration';
         synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
       }),
+    }),
+    
+    // Serve static files from uploads directory
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
     
     // Rate limiting
@@ -91,8 +101,10 @@ import configuration, { validationSchema } from './config/configuration';
     // Application modules
     UsersModule,
     AuthModule,
-    MailModule,
+    PostsModule,
+    CommentsModule,
     HealthModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

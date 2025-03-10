@@ -6,6 +6,8 @@ import { setupSecurity } from './common/middleware/security.middleware';
 import { createValidationPipe } from './common/pipes/validation.pipe';
 import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from './common/logger/custom-logger.service';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter, AllExceptionsFilter } from './common/filters/http-exception.filter';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -44,6 +46,15 @@ async function bootstrap() {
 
   // Setup global validation pipe
   app.useGlobalPipes(createValidationPipe());
+
+  // Apply transform interceptor globally
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Apply exception filters globally
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new HttpExceptionFilter()
+  );
 
   // Setup Swagger documentation
   setupSwagger(app);

@@ -11,7 +11,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailService } from '../mail/mail.service';
 import { Public } from './decorators/public.decorator';
 import { AuditAction, AuditResource } from '../common/interceptors/audit.interceptor';
-import { AuditActionType } from '../common/entities/audit-log.entity';
+import { AuditActionType } from '../audit/entities/audit-log.entity';
 import { VersionedController } from '../common/decorators/api-version.decorator';
 
 @VersionedController(ApiVersion.V1, 'auth')

@@ -37,7 +37,6 @@ export class AuthService {
             access_token: this.jwtService.sign(payload),
             user: user,
             message: 'Login successful',
-            status: 200, 
             refreshToken: this.jwtService.sign(payload, {
                 expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
                 secret: process.env.JWT_REFRESH_SECRET || 'refreshsecretkey'

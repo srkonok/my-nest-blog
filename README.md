@@ -65,6 +65,23 @@ A modern, production-ready NestJS REST API boilerplate with authentication, auth
   - Memory usage monitoring
   - Disk space monitoring
 
+- **User Management**: Registration, authentication, profile management
+- **Blog Posts**: Create, read, update, delete blog posts with rich text support
+- **Comments**: Add comments to blog posts with threading support
+- **API Versioning**: Support for multiple API versions
+- **Audit Logging**: Track user actions and system events
+- **File Upload**: Upload and manage files with support for local storage, AWS S3, and Google Cloud Storage
+- **Health Checks**: Endpoints to monitor application health
+- **Rate Limiting**: Protect against abuse with rate limiting
+- **Swagger Documentation**: API documentation with Swagger
+- **Validation**: Request validation using class-validator
+- **Logging**: Comprehensive logging system
+- **Error Handling**: Global exception handling
+- **Database Migrations**: TypeORM migrations for database changes
+- **Caching**: Response caching for improved performance
+- **Background Jobs**: Queue-based background job processing
+- **Email Notifications**: Send emails for various events
+
 ## Getting Started
 
 ### Prerequisites
@@ -135,6 +152,59 @@ A modern, production-ready NestJS REST API boilerplate with authentication, auth
 | `ENABLE_AUDIT_LOGGING` | Enable audit logging | true |
 | `AUDIT_LOG_RETENTION_DAYS` | Number of days to keep audit logs | 90 |
 | `SERVER_URL` | Server URL for links in emails | |
+
+# Node Environment
+NODE_ENV=development
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=password
+DB_NAME=nestjs_blog
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=1h
+JWT_REFRESH_SECRET=your_refresh_token_secret
+JWT_REFRESH_EXPIRATION=7d
+
+# Mail Configuration
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USER=user@example.com
+MAIL_PASSWORD=password
+MAIL_FROM=noreply@example.com
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Logging Configuration
+LOG_LEVEL=info
+LOG_TO_FILE=true
+LOG_FILE_PATH=logs/app.log
+
+# Audit Configuration
+ENABLE_AUDIT_LOGGING=true
+AUDIT_LOG_RETENTION_DAYS=90
+
+# File Upload Configuration
+UPLOAD_DESTINATION=local # Options: local, s3, gcs
+UPLOAD_MAX_FILE_SIZE=5242880 # 5MB in bytes
+UPLOAD_ALLOWED_MIME_TYPES=image/jpeg,image/png,image/gif,application/pdf
+
+# AWS S3 Configuration (Required if UPLOAD_DESTINATION=s3)
+AWS_S3_BUCKET=your-bucket-name
+AWS_S3_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+
+# Google Cloud Storage Configuration (Required if UPLOAD_DESTINATION=gcs)
+GCS_BUCKET=your-bucket-name
+GCS_PROJECT_ID=your-project-id
+GCS_CLIENT_EMAIL=your-client-email
+GCS_PRIVATE_KEY=your-private-key
 
 ## Logging
 
@@ -308,3 +378,72 @@ src/
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## File Upload
+
+The application includes a comprehensive file upload system with the following features:
+
+### Features
+
+- **Multiple Storage Options**: Support for local file system, AWS S3, and Google Cloud Storage
+- **File Validation**: Validate file types and sizes before upload
+- **Metadata Storage**: Store file metadata in the database
+- **Secure Access**: Generate secure URLs for file access
+- **User Association**: Associate files with users who uploaded them
+
+### Usage
+
+To upload a file, send a POST request to `/files/upload` with the file in a multipart/form-data request:
+
+```bash
+curl -X POST \
+  http://localhost:3000/files/upload \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'file=@/path/to/your/file.jpg' \
+  -F 'metadata={"description":"My file description"}'
+```
+
+To retrieve a file, send a GET request to `/files/:fileId`:
+
+```bash
+curl -X GET \
+  http://localhost:3000/files/123e4567-e89b-12d3-a456-426614174000 \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN'
+```
+
+To get a URL for a file, send a GET request to `/files/:fileId/url`:
+
+```bash
+curl -X GET \
+  http://localhost:3000/files/123e4567-e89b-12d3-a456-426614174000/url \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN'
+```
+
+To delete a file, send a DELETE request to `/files/:fileId`:
+
+```bash
+curl -X DELETE \
+  http://localhost:3000/files/123e4567-e89b-12d3-a456-426614174000 \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN'
+```
+
+### Configuration
+
+Configure the file upload system using the following environment variables:
+
+- `UPLOAD_DESTINATION`: Set to `local`, `s3`, or `gcs` to specify the storage provider
+- `UPLOAD_MAX_FILE_SIZE`: Maximum file size in bytes (default: 5MB)
+- `UPLOAD_ALLOWED_MIME_TYPES`: Comma-separated list of allowed MIME types
+
+For AWS S3 storage, also set:
+- `AWS_S3_BUCKET`: Your S3 bucket name
+- `AWS_S3_REGION`: AWS region
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+
+For Google Cloud Storage, also set:
+- `GCS_BUCKET`: Your GCS bucket name
+- `GCS_PROJECT_ID`: Your GCS project ID
+- `GCS_CLIENT_EMAIL`: Your GCS client email
+- `GCS_PRIVATE_KEY`: Your GCS private key

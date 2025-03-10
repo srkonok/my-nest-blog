@@ -42,6 +42,55 @@ export const validationSchema = Joi.object({
   ENABLE_AUDIT_LOGGING: Joi.boolean().default(true),
   AUDIT_LOG_RETENTION_DAYS: Joi.number().default(90),
 
+  // File Upload
+  UPLOAD_DESTINATION: Joi.string().default('local').valid('local', 's3', 'gcs'),
+  UPLOAD_MAX_FILE_SIZE: Joi.number().default(5 * 1024 * 1024), // 5MB
+  UPLOAD_ALLOWED_MIME_TYPES: Joi.string().default('image/jpeg,image/png,image/gif,application/pdf'),
+  
+  // AWS S3
+  AWS_S3_BUCKET: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 's3',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  AWS_S3_REGION: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 's3',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  AWS_ACCESS_KEY_ID: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 's3',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  AWS_SECRET_ACCESS_KEY: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 's3',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  
+  // Google Cloud Storage
+  GCS_BUCKET: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 'gcs',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  GCS_PROJECT_ID: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 'gcs',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  GCS_CLIENT_EMAIL: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 'gcs',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  GCS_PRIVATE_KEY: Joi.string().when('UPLOAD_DESTINATION', {
+    is: 'gcs',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+
   // Server URL
   SERVER_URL: Joi.string().uri().required(),
 });
@@ -80,6 +129,26 @@ export default () => ({
   audit: {
     enabled: process.env.ENABLE_AUDIT_LOGGING !== 'false',
     retentionDays: parseInt(process.env.AUDIT_LOG_RETENTION_DAYS, 10) || 90,
+  },
+  upload: {
+    destination: process.env.UPLOAD_DESTINATION || 'local',
+    maxFileSize: parseInt(process.env.UPLOAD_MAX_FILE_SIZE, 10) || 5 * 1024 * 1024, // 5MB
+    allowedMimeTypes: (process.env.UPLOAD_ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/gif,application/pdf').split(','),
+    localPath: 'uploads',
+  },
+  aws: {
+    s3: {
+      bucket: process.env.AWS_S3_BUCKET,
+      region: process.env.AWS_S3_REGION,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  },
+  gcs: {
+    bucket: process.env.GCS_BUCKET,
+    projectId: process.env.GCS_PROJECT_ID,
+    clientEmail: process.env.GCS_CLIENT_EMAIL,
+    privateKey: process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   },
   server: {
     url: process.env.SERVER_URL,

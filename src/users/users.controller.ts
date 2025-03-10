@@ -10,7 +10,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { AuditAction, AuditResource } from '../common/interceptors/audit.interceptor';
-import { AuditActionType } from '../common/entities/audit-log.entity';
+import { AuditActionType } from '../audit/entities/audit-log.entity';
 import { VersionedController } from '../common/decorators/api-version.decorator';
 
 @ApiTags('users')
