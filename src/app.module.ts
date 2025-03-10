@@ -4,12 +4,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { AuthController } from './auth/auth.controller';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     // Load environment variables
     ConfigModule.forRoot({
-      isGlobal: true, // Makes the ConfigModule available throughout the app
+      isGlobal: true, 
     }),
     // Configure TypeORM with values from .env
     TypeOrmModule.forRootAsync({
@@ -29,8 +31,9 @@ import { UsersModule } from './users/users.module';
       }),
     }),
     UsersModule,
+    AuthModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, AuthController],
   providers: [AppService],
 })
 export class AppModule {}
