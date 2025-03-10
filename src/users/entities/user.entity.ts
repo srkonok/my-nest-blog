@@ -2,7 +2,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
-import e from 'express';
 import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()

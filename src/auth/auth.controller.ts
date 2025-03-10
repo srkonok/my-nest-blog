@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, Get, Query, Req, Res } from '@nestjs/common';
+import { Post, Body, UnauthorizedException, Get, Query, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -9,11 +9,13 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailService } from '../mail/mail.service';
+import { Public } from './decorators/public.decorator';
+import { AuditAction, AuditResource } from '../common/interceptors/audit.interceptor';
+import { AuditActionType } from '../common/entities/audit-log.entity';
+import { VersionedController } from '../common/decorators/api-version.decorator';
 
-@Controller({
-    path: 'auth',
-    version: ApiVersion.V1,
-})
+@VersionedController(ApiVersion.V1, 'auth')
+@AuditResource('auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
@@ -21,12 +23,12 @@ export class AuthController {
         private readonly mailService: MailService,
     ) {}
 
-
-
+    @Public()
     @Post('login')
     @ApiOperation({ summary: 'Login a user' })
     @ApiBody({ type: LoginDto })
     @ApiResponse({ status: 200, description: 'The user has been successfully logged in.', type: User })
+    @AuditAction(AuditActionType.LOGIN)
     async login(@Body() body: { email: string; password: string }) {
         const user = await this.authService.validateUser(body.email, body.password);
         if (!user) {
@@ -39,58 +41,81 @@ export class AuthController {
         });
     }
 
+    @Public()
     @Post('register')
-    @ApiOperation({ summary: 'Register a user' })
+    @ApiOperation({ summary: 'Register a new user' })
     @ApiBody({ type: CreateUserDto })
-    @ApiResponse({ status: 200, description: 'The user has been successfully registered.', type: User })
+    @ApiResponse({ status: 201, description: 'The user has been successfully created.', type: User })
+    @AuditAction(AuditActionType.CREATE)
     async register(@Body() body: CreateUserDto) {
         return this.authService.register(body);
     }
 
     @Post('refresh-token')
-    @ApiOperation({ summary: 'Refresh a user token' })
-    @ApiBody({ type: User })
-    @ApiResponse({ status: 200, description: 'The user token has been successfully refreshed.', type: User })
+    @ApiOperation({ summary: 'Refresh token' })
+    @ApiResponse({ status: 200, description: 'Token refreshed successfully.' })
+    @AuditAction(AuditActionType.ACCESS)
     async refreshToken(@Body() body: User) {
         return this.authService.refreshToken(body);
     }
 
     @Post('logout')
     @ApiOperation({ summary: 'Logout a user' })
-    @ApiBody({ type: User })
-    @ApiResponse({ status: 200, description: 'The user has been successfully logged out.', type: User })
+    @ApiResponse({ status: 200, description: 'The user has been successfully logged out.' })
+    @AuditAction(AuditActionType.LOGOUT)
     async logout(@Body() body: User) {
         return this.authService.logout(body);
     }
 
-
+    @Public()
     @Post('forgot-password')
-    @ApiOperation({ summary: 'Forgot a user password' })
+    @ApiOperation({ summary: 'Request password reset' })
     @ApiBody({ type: ForgotPasswordDto })
-    @ApiResponse({ status: 200, description: 'The password reset instructions have been sent to your email.', type: Object })
+    @ApiResponse({ status: 200, description: 'Password reset email sent.' })
+    @AuditAction(AuditActionType.PASSWORD_RESET)
     async forgotPassword(@Body() body: ForgotPasswordDto, @Req() req) {
-        return this.authService.forgotPassword(body, req.ip || req.connection.remoteAddress);
+        return this.authService.forgotPassword(body, req.ip);
     }
 
+    @Public()
     @Get('reset-password')
-    @ApiOperation({ summary: 'Show password reset form' })
-    @ApiResponse({ status: 200, description: 'Returns a HTML form for password reset', type: Object })
+    @ApiOperation({ summary: 'Show reset password form' })
+    @ApiResponse({ status: 200, description: 'Reset password form.' })
     async showResetPasswordForm(@Query('token') token: string, @Res() res) {
-        try {
-            // Validate token first
-            await this.authService.validateResetToken(token);
-            
-            // Return HTML form for password reset
-            return res.send(this.mailService.getPasswordResetForm(token));
-        } catch (error) {
-            return res.send(this.mailService.getInvalidTokenPage());
+        const isValid = await this.authService.validateResetToken(token);
+        if (!isValid) {
+            return res.status(400).send('Invalid or expired token');
         }
+        
+        // In a real application, you would render a form here
+        // For this example, we'll just return a success message
+        return res.status(200).send(`
+            <html>
+                <body>
+                    <h1>Reset Your Password</h1>
+                    <form method="POST" action="/api/v1/auth/reset-password">
+                        <input type="hidden" name="token" value="${token}" />
+                        <div>
+                            <label for="password">New Password:</label>
+                            <input type="password" id="password" name="password" required />
+                        </div>
+                        <div>
+                            <label for="confirmPassword">Confirm Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required />
+                        </div>
+                        <button type="submit">Reset Password</button>
+                    </form>
+                </body>
+            </html>
+        `);
     }
 
+    @Public()
     @Post('reset-password')
-    @ApiOperation({ summary: 'Reset a user password' })
+    @ApiOperation({ summary: 'Reset password' })
     @ApiBody({ type: ResetPasswordDto })
-    @ApiResponse({ status: 200, description: 'The user password has been successfully reset.', type: Object })
+    @ApiResponse({ status: 200, description: 'Password reset successfully.' })
+    @AuditAction(AuditActionType.PASSWORD_CHANGE)
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
         return this.authService.resetPassword(resetPasswordDto);
     }

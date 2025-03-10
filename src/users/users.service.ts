@@ -34,11 +34,31 @@ export class UsersService {
     }
   }
 
+  // Method to count total users
+  async count(): Promise<number> {
+    try {
+      const users = await this.userRepository.getUserList();
+      return users.length;
+    } catch (error) {
+      throw new HttpException("Error counting users", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // Method to get a user by their ID
   async findOne(id: string): Promise<User> {
     try {
+      // Check if id is a valid UUID or numeric ID
+      const isValidId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^\d+$/.test(id);
+      
+      if (!isValidId) {
+        throw new HttpException(`Invalid user ID format: ${id}`, HttpStatus.BAD_REQUEST);
+      }
+      
       return await this.userRepository.getUserById(id);
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
   }

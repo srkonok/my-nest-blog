@@ -1,10 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../../common/enums/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  private readonly logger = new Logger(RolesGuard.name);
+
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -12,11 +14,29 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles) {
+    
+    // If no roles are required, allow access
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
+    
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+    
+    // If no user or no roles, deny access
+    if (!user || !user.roles) {
+      this.logger.warn(`Access denied: No user or roles found in request`);
+      throw new ForbiddenException('You do not have permission to access this resource');
+    }
 
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.roles?.includes(role));
+    // Check if user has any of the required roles
+    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
+    
+    if (!hasRole) {
+      this.logger.warn(`Access denied: User ${user.email} with roles [${user.roles}] attempted to access resource requiring roles [${requiredRoles}]`);
+      throw new ForbiddenException('You do not have permission to access this resource');
+    }
+    
+    return true;
   }
 }

@@ -1,44 +1,58 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { VersioningType } from '@nestjs/common';
+import { setupSwagger } from './common/swagger/swagger.config';
+import { setupSecurity } from './common/middleware/security.middleware';
+import { createValidationPipe } from './common/pipes/validation.pipe';
 import { ConfigService } from '@nestjs/config';
-import { ApiVersion } from './common/constants/version.enum';
+import { CustomLoggerService } from './common/logger/custom-logger.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Ensure logs directory exists
+  const logDir = process.env.LOG_DIR || 'logs';
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
 
-  // Get port from environment variables
+  // Create the application with custom logger
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true, // Buffer logs until custom logger is available
+  });
+  
+  // Get services
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT') || 3000;
+  const logger = app.get(CustomLoggerService);
+  logger.setContext('Bootstrap');
+  
+  // Use custom logger for application logging
+  app.useLogger(logger);
+  
+  const port = configService.get('port') || 3000;
 
-  // Global Prefix
+  // Set global prefix
   app.setGlobalPrefix('api');
 
-  // Global Validation Pipe
-  app.useGlobalPipes(new ValidationPipe());
-
-  // Enable URI-based Versioning
+  // Enable versioning
   app.enableVersioning({
     type: VersioningType.URI,
   });
 
-  // Swagger Configuration
-  const config = new DocumentBuilder()
-    .setTitle('NestJS API')
-    .setDescription('The NestJS API documentation with versioning')
-    .setVersion(ApiVersion.V1) // Use version enum
-    .addTag('users')
-    .addBearerAuth()
-    .build();
+  // Setup security middleware
+  setupSecurity(app);
 
-  const document = SwaggerModule.createDocument(app, config);
+  // Setup global validation pipe
+  app.useGlobalPipes(createValidationPipe());
 
-  // Swagger with versioned URL
-  SwaggerModule.setup(`api/v${ApiVersion.V1}`, app, document);
+  // Setup Swagger documentation
+  setupSwagger(app);
 
   await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}/api/v${ApiVersion.V1}`);
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Swagger documentation is available at: http://localhost:${port}/api/docs`);
 }
-
-bootstrap();
+bootstrap().catch(err => {
+  console.error('Error starting application:', err);
+  process.exit(1);
+});
