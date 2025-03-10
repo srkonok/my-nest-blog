@@ -27,6 +27,31 @@ export class AuthService {
         const payload = { email: user.email, sub: user.id, roles: user.roles };
         return {
             access_token: this.jwtService.sign(payload),
+            user: user,
+            message: 'Login successful',
+            status: 200, 
+            refreshToken: this.jwtService.sign(payload, {
+                expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+                secret: process.env.JWT_REFRESH_SECRET || 'refreshsecretkey'
+            }),
+        };
+    }
+
+    async register(user: User) {
+        return this.usersService.create(user);
+    }
+
+    async refreshToken(user: User) {
+        const payload = { email: user.email, sub: user.id, roles: user.roles || [] };
+        return {
+            access_token: this.jwtService.sign(payload),
+            refreshToken: this.jwtService.sign(payload, { 
+                expiresIn: '7d',
+                secret: process.env.JWT_REFRESH_SECRET || 'refreshsecretkey'
+            }),
+            user: user,
+            message: 'Token refreshed successfully',
+            status: 200
         };
     }
 
