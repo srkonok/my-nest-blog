@@ -13,17 +13,17 @@ export class AuthService {
     ) {}
 
     // Validate user by email and password
-    // async validateUser(email: string, password: string): Promise<Partial<User> | null> {
-    //     const user = await this.usersService.findByEmail(email);
-    //     if (user && await bcrypt.compare(password, user.password)) {
-    //         const { password, ...result } = user;
-    //         return result;
-    //     }
-    //     return null;
-    // }
+    async validateUser(email: string, password: string): Promise<Partial<User> | null> {
+        const user = await this.usersService.findByEmail(email);
+        if (user && await bcrypt.compare(password, user.password)) {
+            const { password, ...result } = user;
+            return result;
+        }
+        return null;
+    }
 
     // Login and return JWT token
-    async login(user: { email: string; id: number; roles: string[] }) {
+    async login(user: { email: string; id: string; roles: string[] }) {
         const payload = { email: user.email, sub: user.id, roles: user.roles };
         return {
             access_token: this.jwtService.sign(payload),

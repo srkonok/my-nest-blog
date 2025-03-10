@@ -50,7 +50,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    return this.usersService.findOne(id);
   }
 
   @Put(':id')
@@ -62,7 +62,7 @@ export class UsersController {
     type: User 
   })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
@@ -70,7 +70,7 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'The user has been successfully deleted.' })
   remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+    return this.usersService.remove(id);
   }
 
   // @UseGuards(JwtAuthGuard, RolesGuard)

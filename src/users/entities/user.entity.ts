@@ -2,12 +2,11 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
+import e from 'express';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class User {
-  @ApiProperty({ example: 1, description: 'The unique identifier' })
-  @PrimaryGeneratedColumn()
-  id: number;
+export class User extends BaseEntity {
 
   @ApiProperty({ example: 'John Doe', description: 'The name of the user' })
   @Column()

@@ -1,31 +1,72 @@
 import { Injectable } from '@nestjs/common';
+import { UserRepository } from './user.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly userRepository: UserRepository) {}
+
+  // Method to create a new user
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      const existingUser = await this.findByEmail(createUserDto.email);
+      if (existingUser) {
+        throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
+      }
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      createUserDto.password = hashedPassword;
+      return await this.userRepository.createUser(createUserDto);
+    } catch (error) {
+      throw new HttpException("Error creating user", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  // Method to get all users
+  async findAll(): Promise<User[]> {
+    try {
+      return await this.userRepository.getUserList();
+    } catch (error) {
+      throw new HttpException("Error fetching users", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  // Method to get a user by their ID
+  async findOne(id: string): Promise<User> {
+    try {
+      return await this.userRepository.getUserById(id);
+    } catch (error) {
+      throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  // Method to update a user
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    try {
+      return await this.userRepository.updateUser(updateUserDto, id);
+    } catch (error) {
+      throw new HttpException("Error updating user", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  // Method to delete a user
+  async remove(id: string): Promise<User | Error> {
+    try {
+      return await this.userRepository.deleteUser(id);
+    } catch (error) {
+      throw new HttpException("Error deleting user", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  // async findByEmail(email: string): Promise<User> {
-  //   return this.usersRepository.findOne({ email });
-  // }
+  // Optional: Method to find a user by email
+  async findByEmail(email: string): Promise<User | undefined> {
+    try {
+      return await this.userRepository.findByEmail(email);
+    } catch (error) {
+      throw new HttpException("Error finding user by email", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
