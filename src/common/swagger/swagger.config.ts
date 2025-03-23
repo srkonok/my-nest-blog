@@ -66,38 +66,7 @@ export function setupSwagger(app: INestApplication): void {
   
   const options = new DocumentBuilder()
     .setTitle('NestJS API Boilerplate')
-    .setDescription(`
-      A RESTful API boilerplate built with NestJS
-      
-      ## Response Format
-      
-      ### Success Response
-      
-      All successful responses follow this format:
-      
-      \`\`\`json
-      {
-        "statusCode": 200,
-        "message": "Success",
-        "data": { ... }
-      }
-      \`\`\`
-      
-      ### Error Response
-      
-      All error responses follow this format:
-      
-      \`\`\`json
-      {
-        "statusCode": 400,
-        "message": "Error message",
-        "timestamp": "2025-03-10T19:30:00.000Z",
-        "path": "/api/v1/users",
-        "method": "GET",
-        "error": { ... }
-      }
-      \`\`\`
-    `)
+    .setDescription('API documentation for the NestJS API Boilerplate')
     .setVersion('1.0')
     .addBearerAuth(
       {
