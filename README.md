@@ -1,6 +1,6 @@
 # NestJS REST API Boilerplate
 
-### A modern, production-ready NestJS REST API boilerplate with authentication, authorization, and best practices.
+A modern, production-ready NestJS REST API boilerplate with authentication, authorization, and best practices.
 
 ## Features
 
